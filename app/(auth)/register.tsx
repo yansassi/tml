@@ -39,7 +39,7 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
-      console.log('Tentando registrar usuário:', email);
+      console.log('🚀 Iniciando registro para:', email);
       
       const { data, error } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
@@ -51,58 +51,69 @@ export default function RegisterScreen() {
         }
       });
 
-      console.log('Resposta do registro:', { data, error });
+      console.log('📊 Resposta do Supabase:', { 
+        user: data.user ? 'Criado' : 'Não criado', 
+        session: data.session ? 'Ativa' : 'Não ativa',
+        error: error ? error.message : 'Nenhum erro'
+      });
 
       if (error) {
-        console.error('Erro no registro:', error);
+        console.error('❌ Erro no registro:', error);
         
         // Tratar diferentes tipos de erro
         let errorMessage = 'Erro ao criar conta';
         
-        if (error.message.includes('already registered')) {
+        if (error.message.includes('already registered') || error.message.includes('already been registered')) {
           errorMessage = 'Este email já está cadastrado. Tente fazer login.';
-        } else if (error.message.includes('invalid email')) {
+        } else if (error.message.includes('invalid email') || error.message.includes('Invalid email')) {
           errorMessage = 'Email inválido. Verifique o formato.';
-        } else if (error.message.includes('weak password')) {
+        } else if (error.message.includes('weak password') || error.message.includes('Password')) {
           errorMessage = 'Senha muito fraca. Use pelo menos 6 caracteres.';
-        } else if (error.message.includes('signup disabled')) {
+        } else if (error.message.includes('signup disabled') || error.message.includes('Signup')) {
           errorMessage = 'Cadastro temporariamente desabilitado.';
+        } else if (error.message.includes('Database error')) {
+          errorMessage = 'Erro interno do servidor. Tente novamente em alguns segundos.';
         } else {
           errorMessage = `Erro: ${error.message}`;
         }
         
         Alert.alert('Erro no Registro', errorMessage);
-      } else if (data.user) {
-        console.log('Usuário criado com sucesso:', data.user.id);
+        return;
+      }
+
+      if (data.user) {
+        console.log('✅ Usuário criado com sucesso:', data.user.id);
         
         // Aguardar um pouco para garantir que o trigger foi executado
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('⏳ Aguardando processamento do perfil...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Verificar se o perfil foi criado
+        // Verificar se o perfil foi criado (opcional - não bloquear se falhar)
         try {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('id')
+            .select('id, username')
             .eq('id', data.user.id)
             .single();
           
           if (profileError) {
-            console.log('Perfil não encontrado, mas usuário foi criado. Redirecionando para complete-profile.');
+            console.log('⚠️ Perfil não encontrado ainda, mas usuário foi criado. Redirecionando...');
           } else {
-            console.log('Perfil encontrado:', profile);
+            console.log('✅ Perfil encontrado:', profile);
           }
         } catch (profileCheckError) {
-          console.log('Erro ao verificar perfil:', profileCheckError);
+          console.log('⚠️ Erro ao verificar perfil (não crítico):', profileCheckError);
         }
         
         // Navegar para complete profile independentemente
+        console.log('🎯 Redirecionando para complete-profile...');
         router.push('/(auth)/complete-profile');
       } else {
-        console.error('Resposta inesperada:', { data, error });
-        Alert.alert('Erro', 'Resposta inesperada do servidor. Tente novamente.');
+        console.error('❌ Resposta inesperada - usuário não foi criado');
+        Alert.alert('Erro', 'Erro inesperado. O usuário não foi criado. Tente novamente.');
       }
     } catch (error) {
-      console.error('Erro inesperado:', error);
+      console.error('💥 Erro inesperado:', error);
       Alert.alert('Erro', 'Erro inesperado. Verifique sua conexão e tente novamente.');
     } finally {
       setLoading(false);
