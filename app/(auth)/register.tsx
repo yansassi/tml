@@ -16,35 +16,94 @@ export default function RegisterScreen() {
 
   const handleRegister = async () => {
     if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert('Erro', 'Por favor, preencha todos os campos');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert('Erro', 'As senhas não coincidem');
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      Alert.alert('Erro', 'A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    // Validar formato do email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Erro', 'Por favor, insira um email válido');
       return;
     }
 
     setLoading(true);
     try {
+      console.log('Tentando registrar usuário:', email);
+      
       const { data, error } = await supabase.auth.signUp({
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         password,
+        options: {
+          data: {
+            email: email.trim().toLowerCase()
+          }
+        }
       });
 
+      console.log('Resposta do registro:', { data, error });
+
       if (error) {
-        Alert.alert('Registration Error', error.message);
+        console.error('Erro no registro:', error);
+        
+        // Tratar diferentes tipos de erro
+        let errorMessage = 'Erro ao criar conta';
+        
+        if (error.message.includes('already registered')) {
+          errorMessage = 'Este email já está cadastrado. Tente fazer login.';
+        } else if (error.message.includes('invalid email')) {
+          errorMessage = 'Email inválido. Verifique o formato.';
+        } else if (error.message.includes('weak password')) {
+          errorMessage = 'Senha muito fraca. Use pelo menos 6 caracteres.';
+        } else if (error.message.includes('signup disabled')) {
+          errorMessage = 'Cadastro temporariamente desabilitado.';
+        } else {
+          errorMessage = `Erro: ${error.message}`;
+        }
+        
+        Alert.alert('Erro no Registro', errorMessage);
       } else if (data.user) {
-        // Navigate to complete profile
+        console.log('Usuário criado com sucesso:', data.user.id);
+        
+        // Aguardar um pouco para garantir que o trigger foi executado
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Verificar se o perfil foi criado
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', data.user.id)
+            .single();
+          
+          if (profileError) {
+            console.log('Perfil não encontrado, mas usuário foi criado. Redirecionando para complete-profile.');
+          } else {
+            console.log('Perfil encontrado:', profile);
+          }
+        } catch (profileCheckError) {
+          console.log('Erro ao verificar perfil:', profileCheckError);
+        }
+        
+        // Navegar para complete profile independentemente
         router.push('/(auth)/complete-profile');
+      } else {
+        console.error('Resposta inesperada:', { data, error });
+        Alert.alert('Erro', 'Resposta inesperada do servidor. Tente novamente.');
       }
     } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred');
+      console.error('Erro inesperado:', error);
+      Alert.alert('Erro', 'Erro inesperado. Verifique sua conexão e tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -64,16 +123,16 @@ export default function RegisterScreen() {
           >
             <ArrowLeft size={24} color="#ffffff" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Create Account</Text>
+          <Text style={styles.headerTitle}>Criar Conta</Text>
           <View style={styles.placeholder} />
         </View>
 
         {/* Content */}
         <View style={styles.content}>
           <View style={styles.formContainer}>
-            <Text style={styles.title}>Sign Up</Text>
+            <Text style={styles.title}>Cadastro</Text>
             <Text style={styles.subtitle}>
-              Create your account to start finding duo partners
+              Crie sua conta para começar a encontrar parceiros de duo
             </Text>
 
             {/* Email Input */}
@@ -89,6 +148,7 @@ export default function RegisterScreen() {
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
+                  autoComplete="email"
                 />
               </View>
             </View>
@@ -99,12 +159,13 @@ export default function RegisterScreen() {
                 <Lock size={20} color="#9CA3AF" />
                 <TextInput
                   style={styles.input}
-                  placeholder="Password"
+                  placeholder="Senha"
                   placeholderTextColor="#9CA3AF"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   autoCapitalize="none"
+                  autoComplete="new-password"
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
@@ -125,12 +186,13 @@ export default function RegisterScreen() {
                 <Lock size={20} color="#9CA3AF" />
                 <TextInput
                   style={styles.input}
-                  placeholder="Confirm Password"
+                  placeholder="Confirmar Senha"
                   placeholderTextColor="#9CA3AF"
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   secureTextEntry={!showConfirmPassword}
                   autoCapitalize="none"
+                  autoComplete="new-password"
                 />
                 <TouchableOpacity
                   onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -152,15 +214,15 @@ export default function RegisterScreen() {
               disabled={loading}
             >
               <Text style={styles.registerButtonText}>
-                {loading ? 'Creating Account...' : 'Create Account'}
+                {loading ? 'Criando Conta...' : 'Criar Conta'}
               </Text>
             </TouchableOpacity>
 
             {/* Login Link */}
             <View style={styles.loginContainer}>
-              <Text style={styles.loginText}>Already have an account? </Text>
+              <Text style={styles.loginText}>Já tem uma conta? </Text>
               <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
-                <Text style={styles.loginLink}>Sign In</Text>
+                <Text style={styles.loginLink}>Entrar</Text>
               </TouchableOpacity>
             </View>
           </View>
