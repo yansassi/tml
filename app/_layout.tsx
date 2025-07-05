@@ -11,6 +11,7 @@ import {
 } from '@expo-google-fonts/inter';
 import * as SplashScreen from 'expo-splash-screen';
 import { Platform } from 'react-native';
+import { AuthProvider } from '@/components/AuthProvider';
 
 // Prevent auto hide only on native platforms
 if (Platform.OS !== 'web') {
@@ -40,14 +41,15 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <AuthProvider>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="chat/[matchId]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="profile" />
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="light" />
-    </>
+    </AuthProvider>
   );
 }
