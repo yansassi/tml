@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Modal, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, MapPin, Target, Crown, Users, X, Check } from 'lucide-react-native';
+import { ChevronRight, MapPin, Target, Crown, Users, X, Check, Image } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 // Mobile Legends ranks/elos
@@ -138,6 +138,7 @@ function SelectionModal({
       >
         <View style={styles.modalItemContent}>
           {item.icon && <Text style={styles.modalItemIcon}>{item.icon}</Text>}
+          {item.image && <Image source={item.image} style={styles.modalItemImage} />}
           <View style={styles.modalItemInfo}>
             <Text style={[
               styles.modalItemName,
@@ -607,6 +608,12 @@ const styles = StyleSheet.create({
   },
   modalItemIcon: {
     fontSize: 20,
+    marginRight: 12,
+  },
+  modalItemImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     marginRight: 12,
   },
   modalItemInfo: {

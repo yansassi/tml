@@ -19,13 +19,13 @@ const ranks = [
   { id: 'mythical_immortal', name: 'Mythical Immortal', icon: '🌟', color: '#F97316', tier: 10 },
 ];
 
-// Mobile Legends lanes/roles
+// Mobile Legends lanes/roles with local images
 const lanes = [
-  { id: 'jungle', name: 'Jungle', icon: '🌿', color: '#22C55E' },
-  { id: 'exp', name: 'EXP Lane', icon: '⚔️', color: '#EF4444' },
-  { id: 'gold', name: 'Gold Lane', icon: '💰', color: '#F59E0B' },
-  { id: 'mid', name: 'Mid Lane', icon: '🔥', color: '#8B5CF6' },
-  { id: 'roam', name: 'Roam', icon: '🛡️', color: '#3B82F6' },
+  { id: 'jungle', name: 'Jungle', image: require('../../img/lane/jungle.webp'), color: '#22C55E' },
+  { id: 'exp', name: 'EXP Lane', image: require('../../img/lane/exp.webp'), color: '#EF4444' },
+  { id: 'gold', name: 'Gold Lane', image: require('../../img/lane/gold.webp'), color: '#F59E0B' },
+  { id: 'mid', name: 'Mid Lane', image: require('../../img/lane/mid.webp'), color: '#8B5CF6' },
+  { id: 'roam', name: 'Roam', image: require('../../img/lane/Roam.webp'), color: '#3B82F6' },
 ];
 
 // Estados e cidades do Brasil
@@ -376,7 +376,10 @@ function LaneTag({ lane, isSelected, onPress }: LaneTagProps) {
       ]}
       onPress={onPress}
     >
-      <Text style={styles.laneEmoji}>{lane.icon}</Text>
+      <Image source={lane.image} style={[
+        styles.laneTagImage,
+        { tintColor: isSelected ? '#ffffff' : '#6B7280' }
+      ]} />
       <Text style={[
         styles.laneText,
         isSelected && styles.laneTextSelected
@@ -1136,8 +1139,9 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     gap: 8,
   },
-  laneEmoji: {
-    fontSize: 16,
+  laneTagImage: {
+    width: 20,
+    height: 20,
   },
   laneText: {
     fontSize: 14,

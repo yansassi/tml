@@ -20,13 +20,13 @@ const ranks = [
   { id: 'mythical_immortal', name: 'Mythical Immortal', icon: '🌟', color: '#F97316', tier: 10 },
 ];
 
-// Mobile Legends lanes/roles
+// Mobile Legends lanes/roles with local images
 const lanes = [
-  { id: 'jungle', name: 'Jungle', icon: '🌿', color: '#22C55E' },
-  { id: 'exp', name: 'EXP Lane', icon: '⚔️', color: '#EF4444' },
-  { id: 'gold', name: 'Gold Lane', icon: '💰', color: '#F59E0B' },
-  { id: 'mid', name: 'Mid Lane', icon: '🔥', color: '#8B5CF6' },
-  { id: 'roam', name: 'Roam', icon: '🛡️', color: '#3B82F6' },
+  { id: 'jungle', name: 'Jungle', image: require('../../img/lane/jungle.webp'), color: '#22C55E' },
+  { id: 'exp', name: 'EXP Lane', image: require('../../img/lane/exp.webp'), color: '#EF4444' },
+  { id: 'gold', name: 'Gold Lane', image: require('../../img/lane/gold.webp'), color: '#F59E0B' },
+  { id: 'mid', name: 'Mid Lane', image: require('../../img/lane/mid.webp'), color: '#8B5CF6' },
+  { id: 'roam', name: 'Roam', image: require('../../img/lane/Roam.webp'), color: '#3B82F6' },
 ];
 
 // Popular Mobile Legends heroes with local images
@@ -154,7 +154,7 @@ function LaneDisplay({ laneIds }: LaneDisplayProps) {
           key={lane.id}
           style={[styles.laneDisplayTag, { backgroundColor: lane.color }]}
         >
-          <Text style={styles.laneDisplayEmoji}>{lane.icon}</Text>
+          <Image source={lane.image} style={styles.laneDisplayImage} />
           <Text style={styles.laneDisplayText}>{lane.name}</Text>
         </View>
       ))}
@@ -493,8 +493,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 8,
   },
-  laneDisplayEmoji: {
-    fontSize: 16,
+  laneDisplayImage: {
+    width: 20,
+    height: 20,
+    tintColor: '#ffffff',
   },
   laneDisplayText: {
     fontSize: 14,
