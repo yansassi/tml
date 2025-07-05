@@ -246,16 +246,16 @@ const matchProfiles: Record<string, any> = {
 
 // Mobile Legends ranks/elos
 const ranks = [
-  { id: 'warrior', name: 'Warrior', icon: '⚔️', color: '#8B5A2B', tier: 1 },
-  { id: 'elite', name: 'Elite', icon: '🛡️', color: '#C0C0C0', tier: 2 },
-  { id: 'master', name: 'Master', icon: '🎖️', color: '#CD7F32', tier: 3 },
-  { id: 'grandmaster', name: 'Grandmaster', icon: '🏅', color: '#FFD700', tier: 4 },
-  { id: 'epic', name: 'Epic', icon: '💜', color: '#8B5CF6', tier: 5 },
-  { id: 'legend', name: 'Legend', icon: '🔥', color: '#F59E0B', tier: 6 },
-  { id: 'mythic', name: 'Mythic', icon: '👑', color: '#EF4444', tier: 7 },
-  { id: 'mythical_honor', name: 'Mythical Honor', icon: '💎', color: '#06B6D4', tier: 8 },
-  { id: 'mythical_glory', name: 'Mythical Glory', icon: '✨', color: '#10B981', tier: 9 },
-  { id: 'mythical_immortal', name: 'Mythical Immortal', icon: '🌟', color: '#F97316', tier: 10 },
+  { id: 'warrior', name: 'Warrior', image: require('../../img/elo/warrior.webp'), color: '#8B5A2B', tier: 1 },
+  { id: 'elite', name: 'Elite', image: require('../../img/elo/Elite.webp'), color: '#C0C0C0', tier: 2 },
+  { id: 'master', name: 'Master', image: require('../../img/elo/Master.webp'), color: '#CD7F32', tier: 3 },
+  { id: 'grandmaster', name: 'Grandmaster', image: require('../../img/elo/Grandmaster.webp'), color: '#FFD700', tier: 4 },
+  { id: 'epic', name: 'Epic', image: require('../../img/elo/Epic.webp'), color: '#8B5CF6', tier: 5 },
+  { id: 'legend', name: 'Legend', image: require('../../img/elo/Legend.webp'), color: '#F59E0B', tier: 6 },
+  { id: 'mythic', name: 'Mythic', image: require('../../img/elo/mythic.webp'), color: '#EF4444', tier: 7 },
+  { id: 'mythical_honor', name: 'Mythical Honor', image: require('../../img/elo/mythical_honor.webp'), color: '#06B6D4', tier: 8 },
+  { id: 'mythical_glory', name: 'Mythical Glory', image: require('../../img/elo/mythical_glory.webp'), color: '#10B981', tier: 9 },
+  { id: 'mythical_immortal', name: 'Mythical Immortal', image: require('../../img/elo/Mythical_immortal.webp'), color: '#F97316', tier: 10 },
 ];
 
 // Mobile Legends lanes/roles with local images
@@ -330,7 +330,7 @@ function RankDisplay({ rankId }: RankDisplayProps) {
   
   return (
     <View style={[styles.rankDisplay, { backgroundColor: rank.color }]}>
-      <Text style={styles.rankDisplayEmoji}>{rank.icon}</Text>
+      <Image source={rank.image} style={styles.rankDisplayImage} />
       <Text style={styles.rankDisplayText}>{rank.name}</Text>
     </View>
   );
@@ -822,8 +822,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  rankDisplayEmoji: {
-    fontSize: 16,
+  rankDisplayImage: {
+    width: 18,
+    height: 18,
   },
   rankDisplayText: {
     fontSize: 14,

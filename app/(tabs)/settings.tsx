@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Modal, FlatList, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, MapPin, Target, Crown, Users, X, Check, Image } from 'lucide-react-native';
+import { ChevronRight, MapPin, Target, Crown, Users, X, Check } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 // Mobile Legends ranks/elos
 const ranks = [
-  { id: 'all', name: 'Todos os Elos', icon: '🌟', color: '#6B7280' },
-  { id: 'warrior', name: 'Warrior', icon: '⚔️', color: '#8B5A2B' },
-  { id: 'elite', name: 'Elite', icon: '🛡️', color: '#C0C0C0' },
-  { id: 'master', name: 'Master', icon: '🎖️', color: '#CD7F32' },
-  { id: 'grandmaster', name: 'Grandmaster', icon: '🏅', color: '#FFD700' },
-  { id: 'epic', name: 'Epic', icon: '💜', color: '#8B5CF6' },
-  { id: 'legend', name: 'Legend', icon: '🔥', color: '#F59E0B' },
-  { id: 'mythic', name: 'Mythic', icon: '👑', color: '#EF4444' },
-  { id: 'mythical_honor', name: 'Mythical Honor', icon: '💎', color: '#06B6D4' },
-  { id: 'mythical_glory', name: 'Mythical Glory', icon: '✨', color: '#10B981' },
-  { id: 'mythical_immortal', name: 'Mythical Immortal', icon: '🌟', color: '#F97316' },
+  { id: 'all', name: 'Todos os Elos', image: require('../../img/elo/warrior.webp'), color: '#6B7280' },
+  { id: 'warrior', name: 'Warrior', image: require('../../img/elo/warrior.webp'), color: '#8B5A2B' },
+  { id: 'elite', name: 'Elite', image: require('../../img/elo/Elite.webp'), color: '#C0C0C0' },
+  { id: 'master', name: 'Master', image: require('../../img/elo/Master.webp'), color: '#CD7F32' },
+  { id: 'grandmaster', name: 'Grandmaster', image: require('../../img/elo/Grandmaster.webp'), color: '#FFD700' },
+  { id: 'epic', name: 'Epic', image: require('../../img/elo/Epic.webp'), color: '#8B5CF6' },
+  { id: 'legend', name: 'Legend', image: require('../../img/elo/Legend.webp'), color: '#F59E0B' },
+  { id: 'mythic', name: 'Mythic', image: require('../../img/elo/mythic.webp'), color: '#EF4444' },
+  { id: 'mythical_honor', name: 'Mythical Honor', image: require('../../img/elo/mythical_honor.webp'), color: '#06B6D4' },
+  { id: 'mythical_glory', name: 'Mythical Glory', image: require('../../img/elo/mythical_glory.webp'), color: '#10B981' },
+  { id: 'mythical_immortal', name: 'Mythical Immortal', image: require('../../img/elo/Mythical_immortal.webp'), color: '#F97316' },
 ];
 
 // Regiões do Brasil
