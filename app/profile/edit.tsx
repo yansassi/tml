@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, Modal, FlatList } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, TextInput, Modal, FlatList, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Camera, Heart, Save, Search, X, Plus, Crown, ChevronDown, MapPin } from 'lucide-react-native';
+import { ArrowLeft, Camera, Heart, Save, Search, X, Plus, Crown, ChevronDown, MapPin, Trash2, Image as ImageIcon } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 
@@ -129,6 +129,16 @@ const heroes = [
   { id: 'mathilda', name: 'Mathilda', image: require('../../img/hero/Mathilda.webp'), role: 'Support' },
 ];
 
+// Fotos de exemplo do Pexels para demonstração
+const samplePhotos = [
+  'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'https://images.pexels.com/photos/1325735/pexels-photo-1325735.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'https://images.pexels.com/photos/1040880/pexels-photo-1040880.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'https://images.pexels.com/photos/1542085/pexels-photo-1542085.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400',
+  'https://images.pexels.com/photos/1000445/pexels-photo-1000445.jpeg?auto=compress&cs=tinysrgb&w=400',
+];
+
 const initialProfile = {
   name: 'Alex',
   age: 26,
@@ -148,10 +158,11 @@ const initialProfile = {
 interface PhotoSlotProps {
   photo?: string;
   isMain?: boolean;
-  onPress: () => void;
+  index: number;
+  onPress: (index: number) => void;
 }
 
-function PhotoSlot({ photo, isMain = false, onPress }: PhotoSlotProps) {
+function PhotoSlot({ photo, isMain = false, index, onPress }: PhotoSlotProps) {
   return (
     <TouchableOpacity 
       style={[
@@ -159,20 +170,92 @@ function PhotoSlot({ photo, isMain = false, onPress }: PhotoSlotProps) {
         isMain && styles.mainPhotoSlot,
         !photo && styles.emptyPhotoSlot
       ]}
-      onPress={onPress}
+      onPress={() => onPress(index)}
     >
       {photo ? (
-        <Image source={{ uri: photo }} style={styles.photo} />
+        <>
+          <Image source={{ uri: photo }} style={styles.photo} />
+          <View style={styles.photoOverlay}>
+            <Camera size={16} color="#ffffff" />
+          </View>
+        </>
       ) : (
         <View style={styles.emptyPhoto}>
           <Camera size={24} color="#9CA3AF" />
           <Text style={styles.addPhotoText}>Add Photo</Text>
         </View>
       )}
-      <View style={styles.photoOverlay}>
-        <Camera size={16} color="#ffffff" />
-      </View>
     </TouchableOpacity>
+  );
+}
+
+interface PhotoActionModalProps {
+  visible: boolean;
+  hasPhoto: boolean;
+  onClose: () => void;
+  onAddPhoto: () => void;
+  onChangePhoto: () => void;
+  onRemovePhoto: () => void;
+}
+
+function PhotoActionModal({ 
+  visible, 
+  hasPhoto, 
+  onClose, 
+  onAddPhoto, 
+  onChangePhoto, 
+  onRemovePhoto 
+}: PhotoActionModalProps) {
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.photoModalOverlay}>
+        <View style={styles.photoModalContent}>
+          <View style={styles.photoModalHeader}>
+            <Text style={styles.photoModalTitle}>
+              {hasPhoto ? 'Gerenciar Foto' : 'Adicionar Foto'}
+            </Text>
+            <TouchableOpacity style={styles.photoModalCloseButton} onPress={onClose}>
+              <X size={24} color="#1F2937" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.photoModalActions}>
+            {!hasPhoto ? (
+              <TouchableOpacity style={styles.photoActionButton} onPress={onAddPhoto}>
+                <View style={[styles.photoActionIcon, { backgroundColor: '#4ADE80' }]}>
+                  <ImageIcon size={24} color="#ffffff" />
+                </View>
+                <Text style={styles.photoActionText}>Adicionar Foto</Text>
+                <Text style={styles.photoActionSubtext}>Escolher da galeria</Text>
+              </TouchableOpacity>
+            ) : (
+              <>
+                <TouchableOpacity style={styles.photoActionButton} onPress={onChangePhoto}>
+                  <View style={[styles.photoActionIcon, { backgroundColor: '#3B82F6' }]}>
+                    <Camera size={24} color="#ffffff" />
+                  </View>
+                  <Text style={styles.photoActionText}>Trocar Foto</Text>
+                  <Text style={styles.photoActionSubtext}>Escolher nova imagem</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.photoActionButton} onPress={onRemovePhoto}>
+                  <View style={[styles.photoActionIcon, { backgroundColor: '#EF4444' }]}>
+                    <Trash2 size={24} color="#ffffff" />
+                  </View>
+                  <Text style={styles.photoActionText}>Remover Foto</Text>
+                  <Text style={styles.photoActionSubtext}>Excluir esta imagem</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -553,6 +636,10 @@ export default function EditProfileScreen() {
   const [favoriteHeroes, setFavoriteHeroes] = useState<string[]>(initialProfile.favoriteHeroes);
   const [currentRank, setCurrentRank] = useState<string>(initialProfile.currentRank);
   const [heroModalVisible, setHeroModalVisible] = useState(false);
+  
+  // Estados para o modal de ações de foto
+  const [photoActionModalVisible, setPhotoActionModalVisible] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number>(0);
 
   const toggleLane = (laneId: string) => {
     setSelectedLanes(prev => {
@@ -591,9 +678,80 @@ export default function EditProfileScreen() {
   };
 
   const handlePhotoPress = (index: number) => {
-    // Here you would open camera/gallery
-    console.log('Edit photo at index:', index);
+    setSelectedPhotoIndex(index);
+    setPhotoActionModalVisible(true);
   };
+
+  const handleAddPhoto = () => {
+    // Simula adicionar uma foto aleatória do array de fotos de exemplo
+    const randomPhoto = samplePhotos[Math.floor(Math.random() * samplePhotos.length)];
+    
+    setProfile(prev => {
+      const newPhotos = [...prev.photos];
+      newPhotos[selectedPhotoIndex] = randomPhoto;
+      return { ...prev, photos: newPhotos };
+    });
+    
+    setPhotoActionModalVisible(false);
+    
+    // Mostra um alerta de sucesso
+    Alert.alert(
+      'Foto Adicionada',
+      'Foto adicionada com sucesso! Em um app real, você escolheria da galeria.',
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleChangePhoto = () => {
+    // Simula trocar por uma foto aleatória diferente
+    const currentPhoto = profile.photos[selectedPhotoIndex];
+    const availablePhotos = samplePhotos.filter(photo => photo !== currentPhoto);
+    const randomPhoto = availablePhotos[Math.floor(Math.random() * availablePhotos.length)];
+    
+    setProfile(prev => {
+      const newPhotos = [...prev.photos];
+      newPhotos[selectedPhotoIndex] = randomPhoto;
+      return { ...prev, photos: newPhotos };
+    });
+    
+    setPhotoActionModalVisible(false);
+    
+    Alert.alert(
+      'Foto Alterada',
+      'Foto alterada com sucesso! Em um app real, você escolheria da galeria.',
+      [{ text: 'OK' }]
+    );
+  };
+
+  const handleRemovePhoto = () => {
+    Alert.alert(
+      'Remover Foto',
+      'Tem certeza que deseja remover esta foto?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Remover',
+          style: 'destructive',
+          onPress: () => {
+            setProfile(prev => {
+              const newPhotos = [...prev.photos];
+              newPhotos.splice(selectedPhotoIndex, 1);
+              return { ...prev, photos: newPhotos };
+            });
+            setPhotoActionModalVisible(false);
+          }
+        }
+      ]
+    );
+  };
+
+  const closePhotoModal = () => {
+    setPhotoActionModalVisible(false);
+    setSelectedPhotoIndex(0);
+  };
+
+  const currentPhoto = profile.photos[selectedPhotoIndex];
+  const hasPhoto = !!currentPhoto;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -615,18 +773,24 @@ export default function EditProfileScreen() {
             <PhotoSlot 
               photo={profile.photos[0]} 
               isMain 
-              onPress={() => handlePhotoPress(0)}
+              index={0}
+              onPress={handlePhotoPress}
             />
             <View style={styles.smallPhotos}>
               <PhotoSlot 
                 photo={profile.photos[1]} 
-                onPress={() => handlePhotoPress(1)}
+                index={1}
+                onPress={handlePhotoPress}
               />
               <PhotoSlot 
                 photo={profile.photos[2]} 
-                onPress={() => handlePhotoPress(2)}
+                index={2}
+                onPress={handlePhotoPress}
               />
-              <PhotoSlot onPress={() => handlePhotoPress(3)} />
+              <PhotoSlot 
+                index={3}
+                onPress={handlePhotoPress}
+              />
             </View>
           </View>
         </View>
@@ -735,6 +899,16 @@ export default function EditProfileScreen() {
         </View>
       </ScrollView>
 
+      {/* Photo Action Modal */}
+      <PhotoActionModal
+        visible={photoActionModalVisible}
+        hasPhoto={hasPhoto}
+        onClose={closePhotoModal}
+        onAddPhoto={handleAddPhoto}
+        onChangePhoto={handleChangePhoto}
+        onRemovePhoto={handleRemovePhoto}
+      />
+
       {/* Hero Selection Modal */}
       <HeroSelectionModal
         visible={heroModalVisible}
@@ -839,6 +1013,76 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
     borderRadius: 12,
     padding: 4,
+  },
+  // Photo Action Modal Styles
+  photoModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  photoModalContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    margin: 20,
+    maxWidth: 400,
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  photoModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  photoModalTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
+  },
+  photoModalCloseButton: {
+    padding: 8,
+  },
+  photoModalActions: {
+    padding: 20,
+    gap: 16,
+  },
+  photoActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  photoActionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  photoActionText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
+    flex: 1,
+  },
+  photoActionSubtext: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    marginTop: 2,
   },
   infoSection: {
     paddingHorizontal: 20,

@@ -1,32 +1,65 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Modal, FlatList, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Modal, FlatList, Image, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, MapPin, Target, Crown, Users, X, Check } from 'lucide-react-native';
+import { ChevronRight, Target, Crown, Users, X, Check, Search, Globe, LogOut } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import AgeRangeSlider from '@/components/AgeRangeSlider';
 
 // Mobile Legends ranks/elos
 const ranks = [
-  { id: 'all', name: 'Todos os Elos', image: require('../../img/elo/warrior.webp'), color: '#6B7280' },
-  { id: 'warrior', name: 'Warrior', image: require('../../img/elo/warrior.webp'), color: '#8B5A2B' },
-  { id: 'elite', name: 'Elite', image: require('../../img/elo/Elite.webp'), color: '#C0C0C0' },
-  { id: 'master', name: 'Master', image: require('../../img/elo/Master.webp'), color: '#CD7F32' },
-  { id: 'grandmaster', name: 'Grandmaster', image: require('../../img/elo/Grandmaster.webp'), color: '#FFD700' },
-  { id: 'epic', name: 'Epic', image: require('../../img/elo/Epic.webp'), color: '#8B5CF6' },
-  { id: 'legend', name: 'Legend', image: require('../../img/elo/Legend.webp'), color: '#F59E0B' },
-  { id: 'mythic', name: 'Mythic', image: require('../../img/elo/mythic.webp'), color: '#EF4444' },
-  { id: 'mythical_honor', name: 'Mythical Honor', image: require('../../img/elo/mythical_honor.webp'), color: '#06B6D4' },
-  { id: 'mythical_glory', name: 'Mythical Glory', image: require('../../img/elo/mythical_glory.webp'), color: '#10B981' },
-  { id: 'mythical_immortal', name: 'Mythical Immortal', image: require('../../img/elo/Mythical_immortal.webp'), color: '#F97316' },
+  { id: 'warrior', name: 'Warrior', image: require('../../img/elo/warrior.webp'), color: '#8B5A2B', tier: 1 },
+  { id: 'elite', name: 'Elite', image: require('../../img/elo/Elite.webp'), color: '#C0C0C0', tier: 2 },
+  { id: 'master', name: 'Master', image: require('../../img/elo/Master.webp'), color: '#CD7F32', tier: 3 },
+  { id: 'grandmaster', name: 'Grandmaster', image: require('../../img/elo/Grandmaster.webp'), color: '#FFD700', tier: 4 },
+  { id: 'epic', name: 'Epic', image: require('../../img/elo/Epic.webp'), color: '#8B5CF6', tier: 5 },
+  { id: 'legend', name: 'Legend', image: require('../../img/elo/Legend.webp'), color: '#F59E0B', tier: 6 },
+  { id: 'mythic', name: 'Mythic', image: require('../../img/elo/mythic.webp'), color: '#EF4444', tier: 7 },
+  { id: 'mythical_honor', name: 'Mythical Honor', image: require('../../img/elo/mythical_honor.webp'), color: '#06B6D4', tier: 8 },
+  { id: 'mythical_glory', name: 'Mythical Glory', image: require('../../img/elo/mythical_glory.webp'), color: '#10B981', tier: 9 },
+  { id: 'mythical_immortal', name: 'Mythical Immortal', image: require('../../img/elo/Mythical_immortal.webp'), color: '#F97316', tier: 10 },
 ];
 
-// Regiões do Brasil
-const regions = [
-  { id: 'all', name: 'Todas as Regiões', icon: '🌎' },
-  { id: 'norte', name: 'Norte', icon: '🌿' },
-  { id: 'nordeste', name: 'Nordeste', icon: '☀️' },
-  { id: 'centro-oeste', name: 'Centro-Oeste', icon: '🌾' },
-  { id: 'sudeste', name: 'Sudeste', icon: '🏙️' },
-  { id: 'sul', name: 'Sul', icon: '❄️' },
+// Estados brasileiros organizados por região
+const brazilianStates = [
+  { id: 'all_states', name: 'Todos os Estados', state: 'BR', region: 'Brasil' },
+  
+  // Norte
+  { id: 'ac', name: 'Acre', state: 'AC', region: 'Norte' },
+  { id: 'ap', name: 'Amapá', state: 'AP', region: 'Norte' },
+  { id: 'am', name: 'Amazonas', state: 'AM', region: 'Norte' },
+  { id: 'pa', name: 'Pará', state: 'PA', region: 'Norte' },
+  { id: 'ro', name: 'Rondônia', state: 'RO', region: 'Norte' },
+  { id: 'rr', name: 'Roraima', state: 'RR', region: 'Norte' },
+  { id: 'to', name: 'Tocantins', state: 'TO', region: 'Norte' },
+  
+  // Nordeste
+  { id: 'al', name: 'Alagoas', state: 'AL', region: 'Nordeste' },
+  { id: 'ba', name: 'Bahia', state: 'BA', region: 'Nordeste' },
+  { id: 'ce', name: 'Ceará', state: 'CE', region: 'Nordeste' },
+  { id: 'ma', name: 'Maranhão', state: 'MA', region: 'Nordeste' },
+  { id: 'pb', name: 'Paraíba', state: 'PB', region: 'Nordeste' },
+  { id: 'pe', name: 'Pernambuco', state: 'PE', region: 'Nordeste' },
+  { id: 'pi', name: 'Piauí', state: 'PI', region: 'Nordeste' },
+  { id: 'rn', name: 'Rio Grande do Norte', state: 'RN', region: 'Nordeste' },
+  { id: 'se', name: 'Sergipe', state: 'SE', region: 'Nordeste' },
+  
+  // Centro-Oeste
+  { id: 'go', name: 'Goiás', state: 'GO', region: 'Centro-Oeste' },
+  { id: 'mt', name: 'Mato Grosso', state: 'MT', region: 'Centro-Oeste' },
+  { id: 'ms', name: 'Mato Grosso do Sul', state: 'MS', region: 'Centro-Oeste' },
+  { id: 'df', name: 'Distrito Federal', state: 'DF', region: 'Centro-Oeste' },
+  
+  // Sudeste
+  { id: 'es', name: 'Espírito Santo', state: 'ES', region: 'Sudeste' },
+  { id: 'mg', name: 'Minas Gerais', state: 'MG', region: 'Sudeste' },
+  { id: 'rj', name: 'Rio de Janeiro', state: 'RJ', region: 'Sudeste' },
+  { id: 'sp', name: 'São Paulo', state: 'SP', region: 'Sudeste' },
+  
+  // Sul
+  { id: 'pr', name: 'Paraná', state: 'PR', region: 'Sul' },
+  { id: 'rs', name: 'Rio Grande do Sul', state: 'RS', region: 'Sul' },
+  { id: 'sc', name: 'Santa Catarina', state: 'SC', region: 'Sul' },
 ];
 
 // Lista completa de heróis do Mobile Legends com imagens locais
@@ -98,11 +131,9 @@ const heroes = [
 
 interface MatchPreferences {
   preferredRanks: string[];
-  preferredRegions: string[];
+  preferredStates: string[];
   preferredHeroes: string[];
   ageRange: { min: number; max: number };
-  maxDistance: number;
-  onlyShowOnline: boolean;
 }
 
 interface SelectionModalProps {
@@ -113,6 +144,7 @@ interface SelectionModalProps {
   onClose: () => void;
   onToggleItem: (itemId: string) => void;
   multiSelect?: boolean;
+  searchable?: boolean;
 }
 
 function SelectionModal({ 
@@ -122,8 +154,19 @@ function SelectionModal({
   selectedItems, 
   onClose, 
   onToggleItem, 
-  multiSelect = true 
+  multiSelect = true,
+  searchable = false
 }: SelectionModalProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredItems = searchable 
+    ? items.filter(item => 
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.state && item.state.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.region && item.region.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
+    : items;
+
   const renderItem = ({ item }: { item: any }) => {
     const isSelected = selectedItems.includes(item.id);
     
@@ -137,7 +180,6 @@ function SelectionModal({
         onPress={() => onToggleItem(item.id)}
       >
         <View style={styles.modalItemContent}>
-          {item.icon && <Text style={styles.modalItemIcon}>{item.icon}</Text>}
           {item.image && <Image source={item.image} style={styles.modalItemImage} />}
           <View style={styles.modalItemInfo}>
             <Text style={[
@@ -147,6 +189,11 @@ function SelectionModal({
             ]}>
               {item.name}
             </Text>
+            {item.state && item.state !== 'BR' && (
+              <Text style={styles.modalItemSubtext}>
+                {item.state} • {item.region}
+              </Text>
+            )}
             {item.role && !item.isCategory && (
               <Text style={styles.modalItemRole}>{item.role}</Text>
             )}
@@ -172,8 +219,22 @@ function SelectionModal({
           </TouchableOpacity>
         </View>
 
+        {searchable && (
+          <View style={styles.searchContainer}>
+            <View style={styles.searchInputContainer}>
+              <Search size={20} color="#9CA3AF" />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Buscar estados..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+          </View>
+        )}
+
         <FlatList
-          data={items}
+          data={filteredItems}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.modalList}
@@ -184,68 +245,164 @@ function SelectionModal({
   );
 }
 
+interface AgeRangeModalProps {
+  visible: boolean;
+  ageRange: { min: number; max: number };
+  onClose: () => void;
+  onSave: (ageRange: { min: number; max: number }) => void;
+}
+
+function AgeRangeModal({ visible, ageRange, onClose, onSave }: AgeRangeModalProps) {
+  const [currentRange, setCurrentRange] = useState(ageRange);
+
+  const handleRangeChange = (min: number, max: number) => {
+    setCurrentRange({ min, max });
+  };
+
+  const handleSave = () => {
+    onSave(currentRange);
+    onClose();
+  };
+
+  const handleCancel = () => {
+    setCurrentRange(ageRange);
+    onClose();
+  };
+
+  // Reset range when modal opens
+  React.useEffect(() => {
+    if (visible) {
+      setCurrentRange(ageRange);
+    }
+  }, [visible, ageRange]);
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={styles.ageModalOverlay}>
+        <View style={styles.ageModalContent}>
+          <View style={styles.ageModalHeader}>
+            <Text style={styles.ageModalTitle}>Faixa Etária</Text>
+          </View>
+
+          <View style={styles.ageModalBody}>
+            <Text style={styles.ageModalSubtitle}>
+              Selecione a faixa etária dos perfis que deseja ver
+            </Text>
+
+            <AgeRangeSlider
+              minAge={currentRange.min}
+              maxAge={currentRange.max}
+              absoluteMin={18}
+              absoluteMax={65}
+              onRangeChange={handleRangeChange}
+            />
+          </View>
+
+          <View style={styles.ageModalActions}>
+            <TouchableOpacity style={styles.ageModalCancelButton} onPress={handleCancel}>
+              <Text style={styles.ageModalCancelText}>Cancelar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.ageModalSaveButton} onPress={handleSave}>
+              <LinearGradient
+                colors={['#FF4458', '#FF8A00']}
+                style={styles.ageModalSaveGradient}
+              >
+                <Text style={styles.ageModalSaveText}>Salvar</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export default function SettingsScreen() {
   const [matchPreferences, setMatchPreferences] = useState<MatchPreferences>({
     preferredRanks: ['all'],
-    preferredRegions: ['all'],
+    preferredStates: ['all_states'],
     preferredHeroes: ['all_assassins', 'all_mages'],
     ageRange: { min: 18, max: 35 },
-    maxDistance: 50,
-    onlyShowOnline: false,
   });
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalType, setModalType] = useState<'ranks' | 'regions' | 'heroes'>('ranks');
+  const [modalType, setModalType] = useState<'ranks' | 'states' | 'heroes'>('ranks');
+  const [ageModalVisible, setAgeModalVisible] = useState(false);
 
-  const openModal = (type: 'ranks' | 'regions' | 'heroes') => {
+  const openModal = (type: 'ranks' | 'states' | 'heroes') => {
     setModalType(type);
     setModalVisible(true);
   };
 
   const toggleItem = (itemId: string) => {
     const key = modalType === 'ranks' ? 'preferredRanks' : 
-                modalType === 'regions' ? 'preferredRegions' : 'preferredHeroes';
+                modalType === 'states' ? 'preferredStates' : 'preferredHeroes';
     
     setMatchPreferences(prev => {
       const currentItems = prev[key];
       
-      // Se for "all", limpa outros e adiciona só o "all"
-      if (itemId.startsWith('all')) {
+      // Se for "all" ou "all_states", limpa outros e adiciona só o "all"
+      if (itemId === 'all' || itemId === 'all_states' || itemId.startsWith('all_')) {
         return { ...prev, [key]: [itemId] };
       }
       
       // Se já tem "all" selecionado, remove e adiciona o novo item
-      if (currentItems.includes('all') || currentItems.includes('all_assassins') || 
-          currentItems.includes('all_mages') || currentItems.includes('all_marksmen') ||
-          currentItems.includes('all_tanks') || currentItems.includes('all_fighters') ||
-          currentItems.includes('all_supports')) {
-        const filteredItems = currentItems.filter(id => !id.startsWith('all'));
-        return { ...prev, [key]: [...filteredItems, itemId] };
+      if (currentItems.some(id => id === 'all' || id === 'all_states' || id.startsWith('all_'))) {
+        return { ...prev, [key]: [itemId] };
       }
       
       // Toggle normal
       if (currentItems.includes(itemId)) {
         const newItems = currentItems.filter(id => id !== itemId);
-        return { ...prev, [key]: newItems.length === 0 ? ['all'] : newItems };
+        return { ...prev, [key]: newItems.length === 0 ? [modalType === 'states' ? 'all_states' : 'all'] : newItems };
       } else {
         return { ...prev, [key]: [...currentItems, itemId] };
       }
     });
   };
 
-  const getSelectedItemsText = (type: 'ranks' | 'regions' | 'heroes') => {
+  const handleAgeRangeSave = (newAgeRange: { min: number; max: number }) => {
+    setMatchPreferences(prev => ({ ...prev, ageRange: newAgeRange }));
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Sair da Conta',
+      'Tem certeza que deseja sair da sua conta?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: () => {
+            // Aqui você limparia os dados de autenticação
+            // Por exemplo: AsyncStorage.removeItem('userToken')
+            console.log('User logged out');
+            
+            // Navegar para a tela de login
+            router.replace('/login');
+          },
+        },
+      ]
+    );
+  };
+
+  const getSelectedItemsText = (type: 'ranks' | 'states' | 'heroes') => {
     const key = type === 'ranks' ? 'preferredRanks' : 
-                type === 'regions' ? 'preferredRegions' : 'preferredHeroes';
-    const items = type === 'ranks' ? ranks : type === 'regions' ? regions : heroes;
+                type === 'states' ? 'preferredStates' : 'preferredHeroes';
+    const items = type === 'ranks' ? ranks : type === 'states' ? brazilianStates : heroes;
     const selectedIds = matchPreferences[key];
     
-    if (selectedIds.includes('all') || selectedIds.some(id => id.startsWith('all'))) {
+    if (selectedIds.includes('all') || selectedIds.includes('all_states') || selectedIds.some(id => id.startsWith('all_'))) {
       return 'Todos';
     }
     
     const selectedNames = items
       .filter(item => selectedIds.includes(item.id))
-      .map(item => item.name);
+      .map(item => type === 'states' ? `${item.name} (${item.state})` : item.name);
     
     if (selectedNames.length === 0) return 'Nenhum selecionado';
     if (selectedNames.length === 1) return selectedNames[0];
@@ -256,13 +413,28 @@ export default function SettingsScreen() {
   const getCurrentModalData = () => {
     switch (modalType) {
       case 'ranks':
-        return { items: ranks, selected: matchPreferences.preferredRanks, title: 'Elos Preferidos' };
-      case 'regions':
-        return { items: regions, selected: matchPreferences.preferredRegions, title: 'Regiões Preferidas' };
+        return { 
+          items: ranks, 
+          selected: matchPreferences.preferredRanks, 
+          title: 'Elos Preferidos',
+          searchable: false
+        };
+      case 'states':
+        return { 
+          items: brazilianStates, 
+          selected: matchPreferences.preferredStates, 
+          title: 'Estados Preferidos',
+          searchable: true
+        };
       case 'heroes':
-        return { items: heroes, selected: matchPreferences.preferredHeroes, title: 'Heróis Preferidos' };
+        return { 
+          items: heroes, 
+          selected: matchPreferences.preferredHeroes, 
+          title: 'Heróis Preferidos',
+          searchable: false
+        };
       default:
-        return { items: [], selected: [], title: '' };
+        return { items: [], selected: [], title: '', searchable: false };
     }
   };
 
@@ -301,19 +473,19 @@ export default function SettingsScreen() {
             <ChevronRight size={20} color="#9CA3AF" />
           </TouchableOpacity>
 
-          {/* Regiões Preferidas */}
+          {/* Estados Preferidos */}
           <TouchableOpacity 
             style={styles.preferenceItem}
-            onPress={() => openModal('regions')}
+            onPress={() => openModal('states')}
           >
             <View style={styles.preferenceItemLeft}>
               <View style={[styles.preferenceIcon, { backgroundColor: '#3B82F6' }]}>
-                <MapPin size={20} color="#ffffff" />
+                <Globe size={20} color="#ffffff" />
               </View>
               <View style={styles.preferenceInfo}>
-                <Text style={styles.preferenceTitle}>Regiões Preferidas</Text>
+                <Text style={styles.preferenceTitle}>Estados Preferidos</Text>
                 <Text style={styles.preferenceValue}>
-                  {getSelectedItemsText('regions')}
+                  {getSelectedItemsText('states')}
                 </Text>
               </View>
             </View>
@@ -340,7 +512,10 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           {/* Faixa Etária */}
-          <View style={styles.preferenceItem}>
+          <TouchableOpacity 
+            style={styles.preferenceItem}
+            onPress={() => setAgeModalVisible(true)}
+          >
             <View style={styles.preferenceItemLeft}>
               <View style={[styles.preferenceIcon, { backgroundColor: '#F59E0B' }]}>
                 <Users size={20} color="#ffffff" />
@@ -353,46 +528,7 @@ export default function SettingsScreen() {
               </View>
             </View>
             <ChevronRight size={20} color="#9CA3AF" />
-          </View>
-
-          {/* Distância Máxima */}
-          <View style={styles.preferenceItem}>
-            <View style={styles.preferenceItemLeft}>
-              <View style={[styles.preferenceIcon, { backgroundColor: '#10B981' }]}>
-                <MapPin size={20} color="#ffffff" />
-              </View>
-              <View style={styles.preferenceInfo}>
-                <Text style={styles.preferenceTitle}>Distância Máxima</Text>
-                <Text style={styles.preferenceValue}>
-                  {matchPreferences.maxDistance} km
-                </Text>
-              </View>
-            </View>
-            <ChevronRight size={20} color="#9CA3AF" />
-          </View>
-
-          {/* Mostrar apenas online */}
-          <View style={styles.preferenceItem}>
-            <View style={styles.preferenceItemLeft}>
-              <View style={[styles.preferenceIcon, { backgroundColor: '#4ADE80' }]}>
-                <Users size={20} color="#ffffff" />
-              </View>
-              <View style={styles.preferenceInfo}>
-                <Text style={styles.preferenceTitle}>Apenas Usuários Online</Text>
-                <Text style={styles.preferenceValue}>
-                  {matchPreferences.onlyShowOnline ? 'Ativado' : 'Desativado'}
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={matchPreferences.onlyShowOnline}
-              onValueChange={(value) => 
-                setMatchPreferences(prev => ({ ...prev, onlyShowOnline: value }))
-              }
-              trackColor={{ false: '#E5E7EB', true: '#FF4458' }}
-              thumbColor="#ffffff"
-            />
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Configurações Gerais */}
@@ -431,6 +567,18 @@ export default function SettingsScreen() {
             </LinearGradient>
           </TouchableOpacity>
         </View>
+
+        {/* Seção de Logout */}
+        <View style={styles.logoutSection}>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <View style={styles.logoutButtonContent}>
+              <View style={styles.logoutIcon}>
+                <LogOut size={20} color="#EF4444" />
+              </View>
+              <Text style={styles.logoutButtonText}>Sair da Conta</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
       {/* Modal de Seleção */}
@@ -441,6 +589,15 @@ export default function SettingsScreen() {
         selectedItems={modalData.selected}
         onClose={() => setModalVisible(false)}
         onToggleItem={toggleItem}
+        searchable={modalData.searchable}
+      />
+
+      {/* Modal de Faixa Etária */}
+      <AgeRangeModal
+        visible={ageModalVisible}
+        ageRange={matchPreferences.ageRange}
+        onClose={() => setAgeModalVisible(false)}
+        onSave={handleAgeRangeSave}
       />
     </SafeAreaView>
   );
@@ -540,7 +697,7 @@ const styles = StyleSheet.create({
   },
   saveSection: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    marginBottom: 24,
   },
   saveButton: {
     borderRadius: 16,
@@ -554,6 +711,43 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#ffffff',
+  },
+  // Logout Section Styles
+  logoutSection: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  logoutButton: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#FEE2E2',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  logoutButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  logoutIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FEE2E2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  logoutButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#EF4444',
+    flex: 1,
   },
   // Modal Styles
   modalContainer: {
@@ -577,6 +771,28 @@ const styles = StyleSheet.create({
   },
   modalCloseButton: {
     padding: 8,
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#1F2937',
   },
   modalList: {
     padding: 20,
@@ -606,10 +822,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-  modalItemIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
   modalItemImage: {
     width: 32,
     height: 32,
@@ -635,6 +847,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Bold',
     color: '#374151',
   },
+  modalItemSubtext: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    marginLeft: 8,
+  },
   modalItemRole: {
     fontSize: 12,
     fontFamily: 'Inter-Regular',
@@ -646,5 +864,80 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     marginLeft: 8,
+  },
+  // Age Range Modal Styles
+  ageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ageModalContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    margin: 20,
+    maxWidth: 400,
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  ageModalHeader: {
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  ageModalTitle: {
+    fontSize: 20,
+    fontFamily: 'Inter-SemiBold',
+    color: '#1F2937',
+    textAlign: 'center',
+  },
+  ageModalBody: {
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+  },
+  ageModalSubtitle: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  ageModalActions: {
+    flexDirection: 'row',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    gap: 12,
+  },
+  ageModalCancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  ageModalCancelText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#6B7280',
+  },
+  ageModalSaveButton: {
+    flex: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  ageModalSaveGradient: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  ageModalSaveText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
   },
 });

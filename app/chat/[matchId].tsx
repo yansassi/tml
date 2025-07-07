@@ -11,11 +11,12 @@ import {
   Modal,
   Image,
   ScrollView,
-  Dimensions
+  Dimensions,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Send, Heart, Image as ImageIcon, X, MapPin, Crown } from 'lucide-react-native';
+import { ArrowLeft, Send, Heart, Image as ImageIcon, X, MapPin, Crown, Gem } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -25,7 +26,8 @@ interface Message {
   text: string;
   isMe: boolean;
   timestamp: string;
-  type: 'text' | 'match';
+  type: 'text' | 'match' | 'diamond';
+  diamondCount?: number;
 }
 
 // Mock messages data - expanded to include new matches
@@ -193,6 +195,32 @@ const matchProfiles: Record<string, any> = {
     selectedLanes: ['gold', 'mid'],
     favoriteHeroes: ['granger', 'claude', 'harith'],
   },
+  '3': {
+    name: 'Marina',
+    age: 26,
+    location: 'Belo Horizonte, MG',
+    bio: 'Fitness enthusiast & dog mom 🐕 When I\'m not at the gym, you\'ll find me climbing ranks in Mobile Legends. Main tank but can flex to other roles. Let\'s duo and dominate!',
+    photos: [
+      'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400',
+      'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400',
+    ],
+    currentRank: 'mythic',
+    selectedLanes: ['roam', 'exp'],
+    favoriteHeroes: ['tigreal', 'angela', 'fanny'],
+  },
+  '4': {
+    name: 'Valentina',
+    age: 24,
+    location: 'Salvador, BA',
+    bio: 'Photographer capturing life 📸 Love taking photos and playing Mobile Legends. Always looking for new adventures and duo partners. Can we climb to Mythical Glory together?',
+    photos: [
+      'https://images.pexels.com/photos/1858175/pexels-photo-1858175.jpeg?auto=compress&cs=tinysrgb&w=400',
+      'https://images.pexels.com/photos/1542085/pexels-photo-1542085.jpeg?auto=compress&cs=tinysrgb&w=400',
+    ],
+    currentRank: 'grandmaster',
+    selectedLanes: ['jungle', 'mid'],
+    favoriteHeroes: ['fanny', 'gusion', 'kagura'],
+  },
   '5': {
     name: 'Lucia',
     age: 27,
@@ -283,6 +311,16 @@ const heroes = [
   { id: 'rafaela', name: 'Rafaela', image: require('../../img/hero/Rafaela.webp'), role: 'Support' },
 ];
 
+// Diamond packages for sending
+const diamondPackages = [
+  { id: '1', count: 1, price: '$0.99', color: '#60A5FA' },
+  { id: '5', count: 5, price: '$4.99', color: '#8B5CF6' },
+  { id: '10', count: 10, price: '$9.99', color: '#F59E0B' },
+  { id: '25', count: 25, price: '$19.99', color: '#EF4444' },
+  { id: '50', count: 50, price: '$39.99', color: '#10B981' },
+  { id: '100', count: 100, price: '$79.99', color: '#F97316' },
+];
+
 interface MessageBubbleProps {
   message: Message;
 }
@@ -298,6 +336,33 @@ function MessageBubble({ message }: MessageBubbleProps) {
           <Heart size={20} color="#ffffff" fill="#ffffff" />
           <Text style={styles.matchText}>{message.text}</Text>
         </LinearGradient>
+      </View>
+    );
+  }
+
+  if (message.type === 'diamond') {
+    return (
+      <View style={[
+        styles.diamondMessage,
+        message.isMe ? styles.myDiamondMessage : styles.theirDiamondMessage
+      ]}>
+        <LinearGradient
+          colors={message.isMe ? ['#8B5CF6', '#EC4899'] : ['#60A5FA', '#3B82F6']}
+          style={styles.diamondGradient}
+        >
+          <View style={styles.diamondContent}>
+            <Gem size={24} color="#ffffff" fill="#ffffff" />
+            <Text style={styles.diamondText}>
+              {message.diamondCount} Diamond{message.diamondCount !== 1 ? 's' : ''}
+            </Text>
+            <Text style={styles.diamondSubtext}>
+              {message.isMe ? 'Sent' : 'Received'}
+            </Text>
+          </View>
+        </LinearGradient>
+        <Text style={styles.diamondTimestamp}>
+          {message.timestamp}
+        </Text>
       </View>
     );
   }
@@ -457,11 +522,118 @@ function ProfileModal({ visible, profile, onClose }: ProfileModalProps) {
   );
 }
 
+interface DiamondModalProps {
+  visible: boolean;
+  matchName: string;
+  onClose: () => void;
+  onSendDiamonds: (count: number) => void;
+}
+
+function DiamondModal({ visible, matchName, onClose, onSendDiamonds }: DiamondModalProps) {
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+
+  const handleSendDiamonds = () => {
+    if (selectedPackage) {
+      const packageData = diamondPackages.find(pkg => pkg.id === selectedPackage);
+      if (packageData) {
+        onSendDiamonds(packageData.count);
+        setSelectedPackage(null);
+        onClose();
+      }
+    }
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={styles.diamondModalOverlay}>
+        <View style={styles.diamondModalContent}>
+          <View style={styles.diamondModalHeader}>
+            <Text style={styles.diamondModalTitle}>Send Diamonds</Text>
+            <TouchableOpacity style={styles.diamondModalCloseButton} onPress={onClose}>
+              <X size={24} color="#1F2937" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.diamondModalBody}>
+            <Text style={styles.diamondModalSubtitle}>
+              Send diamonds to {matchName} to show your appreciation! 💎
+            </Text>
+
+            <View style={styles.diamondPackagesGrid}>
+              {diamondPackages.map((pkg) => (
+                <TouchableOpacity
+                  key={pkg.id}
+                  style={[
+                    styles.diamondPackage,
+                    selectedPackage === pkg.id && styles.diamondPackageSelected,
+                    { borderColor: pkg.color }
+                  ]}
+                  onPress={() => setSelectedPackage(pkg.id)}
+                >
+                  <LinearGradient
+                    colors={selectedPackage === pkg.id ? [pkg.color, pkg.color + '80'] : ['#F9FAFB', '#F3F4F6']}
+                    style={styles.diamondPackageGradient}
+                  >
+                    <Gem 
+                      size={32} 
+                      color={selectedPackage === pkg.id ? '#ffffff' : pkg.color} 
+                      fill={selectedPackage === pkg.id ? '#ffffff' : pkg.color}
+                    />
+                    <Text style={[
+                      styles.diamondPackageCount,
+                      selectedPackage === pkg.id && styles.diamondPackageCountSelected
+                    ]}>
+                      {pkg.count}
+                    </Text>
+                    <Text style={[
+                      styles.diamondPackagePrice,
+                      selectedPackage === pkg.id && styles.diamondPackagePriceSelected
+                    ]}>
+                      {pkg.price}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.diamondModalNote}>
+              💡 This is a demo feature. In a real app, this would integrate with RevenueCat for in-app purchases.
+            </Text>
+          </View>
+
+          <View style={styles.diamondModalActions}>
+            <TouchableOpacity style={styles.diamondModalCancelButton} onPress={onClose}>
+              <Text style={styles.diamondModalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[
+                styles.diamondModalSendButton,
+                !selectedPackage && styles.diamondModalSendButtonDisabled
+              ]} 
+              onPress={handleSendDiamonds}
+              disabled={!selectedPackage}
+            >
+              <LinearGradient
+                colors={selectedPackage ? ['#8B5CF6', '#EC4899'] : ['#D1D5DB', '#9CA3AF']}
+                style={styles.diamondModalSendGradient}
+              >
+                <Gem size={20} color="#ffffff" />
+                <Text style={styles.diamondModalSendText}>Send Diamonds</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 export default function ChatScreen() {
   const { matchId } = useLocalSearchParams<{ matchId: string }>();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>(mockMessages[matchId] || []);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
+  const [diamondModalVisible, setDiamondModalVisible] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const matchName = matchNames[matchId] || 'Unknown';
@@ -488,7 +660,37 @@ export default function ChatScreen() {
       
       setMessages(prev => [...prev, newMessage]);
       setMessage('');
+      
+      // Auto-scroll to bottom after sending message
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     }
+  };
+
+  const sendDiamonds = (count: number) => {
+    const diamondMessage: Message = {
+      id: Date.now().toString(),
+      text: '',
+      isMe: true,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      type: 'diamond',
+      diamondCount: count,
+    };
+    
+    setMessages(prev => [...prev, diamondMessage]);
+    
+    // Auto-scroll to bottom after sending diamonds
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+
+    // Show success alert
+    Alert.alert(
+      'Diamonds Sent! 💎',
+      `You sent ${count} diamond${count !== 1 ? 's' : ''} to ${matchName}!`,
+      [{ text: 'OK' }]
+    );
   };
 
   const handleHeaderPress = () => {
@@ -524,43 +726,64 @@ export default function ChatScreen() {
         </View>
       </View>
 
-      {/* Messages */}
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <MessageBubble message={item} />}
-        contentContainerStyle={styles.messagesList}
-        showsVerticalScrollIndicator={false}
-      />
-
-      {/* Input */}
+      {/* Main Content with Keyboard Avoiding */}
       <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.inputContainer}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <View style={styles.inputRow}>
-          <TouchableOpacity style={styles.imageButton}>
-            <ImageIcon size={24} color="#9CA3AF" />
-          </TouchableOpacity>
-          
-          <TextInput
-            style={styles.textInput}
-            value={message}
-            onChangeText={setMessage}
-            placeholder="Type a message..."
-            placeholderTextColor="#9CA3AF"
-            multiline
-            maxLength={500}
-          />
-          
-          <TouchableOpacity 
-            style={[styles.sendButton, message.trim() && styles.sendButtonActive]}
-            onPress={sendMessage}
-            disabled={!message.trim()}
-          >
-            <Send size={20} color={message.trim() ? "#ffffff" : "#9CA3AF"} />
-          </TouchableOpacity>
+        {/* Messages */}
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <MessageBubble message={item} />}
+          contentContainerStyle={styles.messagesList}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          style={styles.messagesContainer}
+        />
+
+        {/* Input */}
+        <View style={styles.inputContainer}>
+          <View style={styles.inputRow}>
+            <TouchableOpacity style={styles.imageButton}>
+              <ImageIcon size={24} color="#9CA3AF" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.diamondButton}
+              onPress={() => setDiamondModalVisible(true)}
+            >
+              <LinearGradient
+                colors={['#8B5CF6', '#EC4899']}
+                style={styles.diamondButtonGradient}
+              >
+                <Gem size={20} color="#ffffff" fill="#ffffff" />
+              </LinearGradient>
+            </TouchableOpacity>
+            
+            <TextInput
+              style={styles.textInput}
+              value={message}
+              onChangeText={setMessage}
+              placeholder="Type a message..."
+              placeholderTextColor="#9CA3AF"
+              multiline
+              maxLength={500}
+              returnKeyType="send"
+              onSubmitEditing={sendMessage}
+              blurOnSubmit={false}
+            />
+            
+            <TouchableOpacity 
+              style={[styles.sendButton, message.trim() && styles.sendButtonActive]}
+              onPress={sendMessage}
+              disabled={!message.trim()}
+            >
+              <Send size={20} color={message.trim() ? "#ffffff" : "#9CA3AF"} />
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
 
@@ -569,6 +792,14 @@ export default function ChatScreen() {
         visible={profileModalVisible}
         profile={matchProfile}
         onClose={() => setProfileModalVisible(false)}
+      />
+
+      {/* Diamond Modal */}
+      <DiamondModal
+        visible={diamondModalVisible}
+        matchName={matchName}
+        onClose={() => setDiamondModalVisible(false)}
+        onSendDiamonds={sendDiamonds}
       />
     </SafeAreaView>
   );
@@ -621,9 +852,16 @@ const styles = StyleSheet.create({
   online: {
     backgroundColor: '#4ADE80',
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
+  messagesContainer: {
+    flex: 1,
+  },
   messagesList: {
     paddingHorizontal: 20,
     paddingVertical: 16,
+    flexGrow: 1,
   },
   matchMessage: {
     alignItems: 'center',
@@ -641,6 +879,46 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#ffffff',
+  },
+  diamondMessage: {
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  myDiamondMessage: {
+    alignSelf: 'flex-end',
+  },
+  theirDiamondMessage: {
+    alignSelf: 'flex-start',
+  },
+  diamondGradient: {
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  diamondContent: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  diamondText: {
+    fontSize: 16,
+    fontFamily: 'Inter-Bold',
+    color: '#ffffff',
+  },
+  diamondSubtext: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  diamondTimestamp: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#9CA3AF',
+    marginTop: 4,
   },
   messageBubble: {
     maxWidth: '75%',
@@ -686,6 +964,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
+    paddingBottom: Platform.OS === 'ios' ? 0 : 16,
   },
   inputRow: {
     flexDirection: 'row',
@@ -696,6 +975,18 @@ const styles = StyleSheet.create({
   },
   imageButton: {
     padding: 8,
+    marginBottom: 4,
+  },
+  diamondButton: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 2,
+  },
+  diamondButtonGradient: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   textInput: {
     flex: 1,
@@ -707,6 +998,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Regular',
     color: '#1F2937',
     maxHeight: 100,
+    minHeight: 44,
   },
   sendButton: {
     width: 40,
@@ -715,9 +1007,141 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 2,
   },
   sendButtonActive: {
     backgroundColor: '#FF4458',
+  },
+  // Diamond Modal Styles
+  diamondModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  diamondModalContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    margin: 20,
+    maxWidth: 400,
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  diamondModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  diamondModalTitle: {
+    fontSize: 20,
+    fontFamily: 'Inter-Bold',
+    color: '#1F2937',
+  },
+  diamondModalCloseButton: {
+    padding: 8,
+  },
+  diamondModalBody: {
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+  },
+  diamondModalSubtitle: {
+    fontSize: 16,
+    fontFamily: 'Inter-Regular',
+    color: '#6B7280',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  diamondPackagesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 20,
+  },
+  diamondPackage: {
+    width: '30%',
+    borderRadius: 16,
+    borderWidth: 2,
+    overflow: 'hidden',
+  },
+  diamondPackageSelected: {
+    borderWidth: 3,
+  },
+  diamondPackageGradient: {
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+    gap: 8,
+  },
+  diamondPackageCount: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: '#1F2937',
+  },
+  diamondPackageCountSelected: {
+    color: '#ffffff',
+  },
+  diamondPackagePrice: {
+    fontSize: 12,
+    fontFamily: 'Inter-Medium',
+    color: '#6B7280',
+  },
+  diamondPackagePriceSelected: {
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  diamondModalNote: {
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    color: '#9CA3AF',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    lineHeight: 20,
+  },
+  diamondModalActions: {
+    flexDirection: 'row',
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    gap: 12,
+  },
+  diamondModalCancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+  },
+  diamondModalCancelText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#6B7280',
+  },
+  diamondModalSendButton: {
+    flex: 2,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  diamondModalSendButtonDisabled: {
+    opacity: 0.5,
+  },
+  diamondModalSendGradient: {
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  diamondModalSendText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
   },
   // Profile Modal Styles
   profileModalContainer: {

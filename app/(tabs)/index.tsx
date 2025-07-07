@@ -1,8 +1,8 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Heart, X, Settings, MapPin } from 'lucide-react-native';
+import { Heart, X, MapPin } from 'lucide-react-native';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -189,10 +189,18 @@ interface ProfileCardProps {
 
 const ProfileCard = React.memo(({ user, onAction }: ProfileCardProps) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const handleAction = (action: 'like' | 'pass') => {
+    // Scroll to top before calling the action
+    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+    onAction(action);
+  };
 
   return (
     <View style={styles.fullScreenCard}>
       <ScrollView 
+        ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         style={styles.cardScrollView}
         contentContainerStyle={styles.cardContent}
@@ -278,7 +286,7 @@ const ProfileCard = React.memo(({ user, onAction }: ProfileCardProps) => {
           <View style={styles.cardActionButtons}>
             <TouchableOpacity
               style={[styles.actionButton, styles.passButton]}
-              onPress={() => onAction('pass')}
+              onPress={() => handleAction('pass')}
             >
               <X size={32} color="#FF4458" />
               <Text style={styles.passButtonText}>Pass</Text>
@@ -286,7 +294,7 @@ const ProfileCard = React.memo(({ user, onAction }: ProfileCardProps) => {
             
             <TouchableOpacity
               style={[styles.actionButton, styles.likeButton]}
-              onPress={() => onAction('like')}
+              onPress={() => handleAction('like')}
             >
               <Heart size={32} color="#ffffff" />
               <Text style={styles.likeButtonText}>Like</Text>
@@ -316,7 +324,6 @@ export default function DiscoverScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Discover</Text>
-          <Settings size={24} color="#9CA3AF" />
         </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyTitle}>No more profiles!</Text>
@@ -330,11 +337,11 @@ export default function DiscoverScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Discover</Text>
-        <Settings size={24} color="#9CA3AF" />
       </View>
 
       <View style={styles.cardContainer}>
         <ProfileCard
+          key={currentIndex} // Add key to force re-render and reset scroll position
           user={users[currentIndex]}
           onAction={handleAction}
         />
@@ -350,7 +357,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
