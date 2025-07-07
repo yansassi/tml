@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Settings, MapPin, Crown, Target } from 'lucide-react-native';
+import { Settings, MapPin, Crown, Target, Gem, TrendingUp } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 
@@ -112,9 +112,47 @@ function HeroDisplay({ heroIds }: HeroDisplayProps) {
 }
 
 export default function ProfileScreen() {
+  const [receivedDiamonds, setReceivedDiamonds] = useState(200); // Mock initial value
+
   const handleEditProfile = () => {
     router.push('/profile/edit');
   };
+
+  const handleWithdrawDiamonds = async () => {
+    if (receivedDiamonds < 165) {
+      Alert.alert(
+        'Diamantes Insuficientes',
+        `Você precisa de pelo menos 165 diamantes para sacar. Você tem ${receivedDiamonds} diamantes.`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Confirmar Saque',
+      `Deseja sacar 165 diamantes? Você ficará com ${receivedDiamonds - 165} diamantes restantes.`,
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Confirmar Saque',
+          style: 'default',
+          onPress: () => {
+            setReceivedDiamonds(prev => prev - 165);
+            Alert.alert(
+              'Saque Realizado! 💎',
+              'Seus diamantes foram sacados com sucesso! O valor será processado em até 24 horas.',
+              [{ text: 'OK' }]
+            );
+          },
+        },
+      ]
+    );
+  };
+
+  const canWithdraw = receivedDiamonds >= 165;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -163,6 +201,75 @@ export default function ProfileScreen() {
           <View style={styles.gameStatsRow}>
             <RankDisplay rankId={userProfile.currentRank} />
           </View>
+        </View>
+
+        {/* Diamonds Section */}
+        <View style={styles.diamondsSection}>
+          <Text style={styles.sectionTitle}>Meus Diamantes</Text>
+          
+          {/* Diamond Display */}
+          <View style={styles.diamondDisplay}>
+            <LinearGradient
+              colors={['#8B5CF6', '#EC4899']}
+              style={styles.diamondDisplayGradient}
+            >
+              <View style={styles.diamondDisplayContent}>
+                <View style={styles.diamondIconContainer}>
+                  <Gem size={32} color="#ffffff" fill="#ffffff" />
+                </View>
+                <View style={styles.diamondInfo}>
+                  <Text style={styles.diamondCountText}>{receivedDiamonds}</Text>
+                  <Text style={styles.diamondLabelText}>Diamantes Recebidos</Text>
+                </View>
+                <View style={styles.diamondTrendIcon}>
+                  <TrendingUp size={20} color="rgba(255, 255, 255, 0.8)" />
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
+
+          {/* Withdraw Button */}
+          <TouchableOpacity 
+            style={[
+              styles.withdrawButton,
+              !canWithdraw && styles.withdrawButtonDisabled
+            ]}
+            onPress={handleWithdrawDiamonds}
+            disabled={!canWithdraw}
+          >
+            <LinearGradient
+              colors={canWithdraw ? ['#4ADE80', '#22C55E'] : ['#D1D5DB', '#9CA3AF']}
+              style={styles.withdrawButtonGradient}
+            >
+              <Gem size={20} color="#ffffff" />
+              <Text style={styles.withdrawButtonText}>
+                {canWithdraw ? 'Sacar Diamantes' : 'Saque Indisponível'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Withdrawal Requirement */}
+          {!canWithdraw && (
+            <View style={styles.withdrawRequirementContainer}>
+              <Text style={styles.withdrawRequirementText}>
+                💎 Mínimo de 165 diamantes necessários para saque
+              </Text>
+              <Text style={styles.withdrawRequirementSubtext}>
+                Você precisa de mais {165 - receivedDiamonds} diamantes
+              </Text>
+            </View>
+          )}
+
+          {canWithdraw && (
+            <View style={styles.withdrawInfoContainer}>
+              <Text style={styles.withdrawInfoText}>
+                ✨ Você pode sacar 165 diamantes agora!
+              </Text>
+              <Text style={styles.withdrawInfoSubtext}>
+                Processamento em até 24 horas
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Preferred Lanes */}
@@ -324,6 +431,129 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Inter-SemiBold',
     color: '#ffffff',
+  },
+  // Diamonds Section Styles
+  diamondsSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  diamondDisplay: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginBottom: 16,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  diamondDisplayGradient: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  diamondDisplayContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  diamondIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  diamondInfo: {
+    flex: 1,
+  },
+  diamondCountText: {
+    fontSize: 32,
+    fontFamily: 'Inter-Bold',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  diamondLabelText: {
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+    color: 'rgba(255, 255, 255, 0.9)',
+  },
+  diamondTrendIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  withdrawButton: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  withdrawButtonDisabled: {
+    shadowOpacity: 0.05,
+    elevation: 2,
+  },
+  withdrawButtonGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  withdrawButtonText: {
+    fontSize: 16,
+    fontFamily: 'Inter-SemiBold',
+    color: '#ffffff',
+  },
+  withdrawRequirementContainer: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+  },
+  withdrawRequirementText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#DC2626',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  withdrawRequirementSubtext: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#EF4444',
+    textAlign: 'center',
+  },
+  withdrawInfoContainer: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+  },
+  withdrawInfoText: {
+    fontSize: 14,
+    fontFamily: 'Inter-SemiBold',
+    color: '#15803D',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  withdrawInfoSubtext: {
+    fontSize: 12,
+    fontFamily: 'Inter-Regular',
+    color: '#22C55E',
+    textAlign: 'center',
   },
   section: {
     paddingHorizontal: 20,
